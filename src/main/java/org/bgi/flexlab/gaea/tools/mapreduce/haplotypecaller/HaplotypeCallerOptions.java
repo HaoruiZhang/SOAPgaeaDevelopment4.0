@@ -41,195 +41,347 @@ public class HaplotypeCallerOptions extends GaeaOptions implements HadoopOptions
     private final static String SOFTWARE_NAME = "HaplotypeCaller";
     private final static String SOFTWARE_VERSION = "0.1";
 
+    
     /**
-     * input alignment data
+     * added in 2017.05.23 by Zhanghaorui
      */
-    private String input = null;
-
-    private boolean samFormat = false;
-
+    
     /**
-     * output directory
+     * Set of alleles to use in genotyping
+     * 
+     * private String alleles = none;
      */
-    private String output = null;
-
-    private boolean bcfFormat = false;
-
+    
     /**
-     * Gaea indexed reference
+     * dbSNP file
+     * 
+     * private String dbsnp = none;
      */
-    private String reference = null;
-
+     
     /**
-     * bed region file
+     * Output the active region to this IGV formatted file
+     * 
+     * private String activeRegionOut = NA;
      */
-    private String bedRegionFile = null;
-
-    /**
-     * Which annotations to add to the output VCF file
+     
+    /*
+     * Output the raw activity profile results in IGV format
+     * 
+     * private String activityProofileOut = NA;
      */
-    private List<String> annotations = new ArrayList<String>();
-
+     
     /**
-     * annotation groups to add to the output VCF file
+     * Write debug assembly graph information to this file
+     * 
+     * private String graphOutput = NA;
      */
-    private List<String> annotationGroups = new ArrayList<String>();
-
+       
+     
     /**
-     * models for genotype likelihood calculator
+     * 	File to which variants should be written
      */
-    // private GenotypeLikelihoodCalculator.Model gtlcalculators = GenotypeLikelihoodCalculator.Model.SNP;
+    private String out = "stdout";
 
+    
     /**
-     * min depth for genotype likelihood calculation
+     * Fraction of contamination to aggressively remove
      */
-    private int minDepth = 4;
-
+    private double contaminationFractionToFilter = 0.0;
+    
     /**
-     * is cap base quality at mapping quality
+     * Specifies how to determine the alternate alleles to use for genotyping
      */
-    private boolean noCapBaseQualsAtMappingQual = false;
-
+    private String genotypingMode = "DISCOVERY";
+    
     /**
-     * minimum base quality
+     * One or more classes/groups of annotations to apply to variant calls
      */
-    private byte minBaseQuality = 17;
-
+    private String group = "[StandardAnnotation,StandardHCAnnotation]";
+    
     /**
-     * minimum mapping quality
+     * Heterozygosity value used to compute prior likelihoods for any locus
      */
-    private short minMappingQuality = 17;
-
+    private double heterozygosity = 0.001;
+    
     /**
-     * output mode
+     * Standard deviation of eterozygosity for SNP and indel calling.
      */
-    private HaplotypeCallerEngine.OUTPUT_MODE outputMode = EMIT_VARIANTS_ONLY;
-
+    private double heterozygosityStdev = 0.01;
+    
     /**
-     * Maximum fraction of reads with deletions spanning this locus for it to be callable
+     * Heterozygosity for indel calling
      */
-    private double maxDeletionFraction = 0.05;
-
+    private double indelHeterozygosity = 1.25E-4;
+    
     /**
-     * A candidate indel is genotyped (and potentially called) if there are this number of reads with a consensus indel at a site.
-     * Decreasing this value will increase sensitivity but at the cost of larger calling time and a larger number of false positives.
+     * Maximum reads in an active region
      */
-    private int minIndelCountForGenotyping = 5;
+    private int maxReadsInRegionPerSample = 10000;
 
     /**
-     * Complementary argument to minIndelCnt.  Only samples with at least this fraction of indel-containing reads will contribute
-     * to counting and overcoming the threshold minIndelCnt.  This parameter ensures that in deep data you don't end
-     * up summing lots of super rare errors up to overcome the 5 read default threshold.  Should work equally well for
-     * low-coverage and high-coverage samples, as low coverage samples with any indel containing reads should easily over
-     * come this threshold.
+     * Minimum base quality required to consider a base for calling
      */
-    private double minIndelFractionPerSample = 0.25;
-
+    private byte minBaseQuality = 10;
+    
     /**
-     * If this fraction is greater is than zero, the caller will aggressively attempt to remove contamination through biased down-sampling of reads.
-     * Basically, it will ignore the contamination fraction of reads for each alternate allele.  So if the pileup contains N total bases, then we
-     * will try to remove (N * contamination fraction) bases for each alternate allele.
+     * Minimum number of reads sharing the same alignment start for each genomic location in an active region
      */
-    private double contaminationFraction = DEFAULT_CONTAMINATION_FRACTION;
-    public static final double DEFAULT_CONTAMINATION_FRACTION = 0.05;
-
+    private int minReadsPerAlignmentStart = 10;
+    
     /**
-     * If there are more than this number of alternate alleles presented to the genotyper (either through discovery or GENOTYPE_GIVEN ALLELES),
-     * then only this many alleles will be used.  Note that genotyping sites with many alternate alleles is both CPU and memory intensive and it
-     * scales exponentially based on the number of alternate alleles.  Unless there is a good reason to change the default value, we highly recommend
-     * that you not play around with this parameter.
+     * Name of single sample to use from a multi-sample bam
+     * 
+     * private String sampleName = NA;
+     */
+    
+    /**
+     * Ploidy per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy).
+     */
+    private int samplePloidy = 2;
+    
+    /**
+     * The minimum phred-scaled confidence threshold at which variants should be called
+     */
+    private double standardConfidenceForCalling = 10.0;
+    
+    /**
+     * Annotate number of alleles observed
+     */
+    private boolean annotateNDA = false;
+    
+    /**
+     * Use new AF model instead of the so-called exact model
+     */
+    private boolean useNewAFCalculator = false;
+    
+    /**
+     * Use this interval list file as the active regions to process
+     * 
+     * private String activeRegionln = NA;
+     */
+    
+    /**
+     * 	Comparison VCF file
+     * 
+     * private String[] comp = "[]";
+     */
+    
+    /**
+     * File to which assembled haplotypes should be written
+     * 
+     * private String bamOutput = NA;
+     */
+    
+    /**
+     * Threshold for the probability of a profile state being active.
+     */
+    private double activeProbabilityThreshold = 0.002;
+    
+    /**
+     * The active region extension; if not provided defaults to Walker annotated default
+     * 
+     * private String activeRegionExtension = NA;
+     */
+    
+    /**
+     * The active region maximum size; if not provided defaults to Walker annotated default
+     * 
+     * private String activeRegionMaxsize = NA;
+     */
+    
+    /**
+     * 	One or more specific annotations to apply to variant calls
+     * 
+     * private String[] annotation = "[]";
+     */
+    
+    /**
+     * Which haplotypes should be written to the BAM
+     */
+    private String bamWriterType = "CALLED_HAPLOTYPES";
+    
+    /**
+     * The sigma of the band pass filter Gaussian kernel; if not provided defaults to Walker annotated default
+     * 
+     * private String bandPassSigma = NA;
+     */
+    
+    /**
+     * 	Contamination per sample
+     * 
+     * private String contaminationFractionPerSampleFile = NA;
+     */
+    
+    /**
+     * Mode for emitting reference confidence scores
+     */
+    private boolean emitRefConfidence = false;
+    
+    /**
+     * One or more specific annotations to exclude
+     * 
+     * private String[] excludeAnnotation = "[]";
+     */
+    
+    /**
+     * Flat gap continuation penalty for use in the Pair HMM
+     */
+    private int gcpHMM = 10;
+    
+    /**
+     * Exclusive upper bounds for reference confidence GQ bands (must be in [1, 100] and specified in increasing order)
+     */
+    private int[] GVCFGQBands = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+    		                     23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+    		                     43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 70, 80, 90, 99};
+   
+    /**
+     * The size of an indel to check for in the reference model
+     */
+    private int indelSizeToEliminateInRefModel = 10;
+    
+    /**
+     * Input prior for calls
+     * 
+     * private String[] inputPrior = "[]";
+     */
+    
+    /**
+     * Kmer size to use in the read threading assembler
+     */
+    private int[]  kmerSize = {10,25};
+    
+    /**
+     * Maximum number of alternate alleles to genotype
      */
     private int maxAlternateAlleles = 6;
-
+    
     /**
      * Maximum number of genotypes to consider at any site
      */
     private int maxGenotypeCount = 1024;
-
+    
     /**
      * Maximum number of PL values to output
      */
-    private int maxNumPLValues = 100;
-
+    private int maxNumPLValue = 100;
+    
     /**
-     * Sample ploidy - equivalent to number of chromosomes per pool. In pooled experiments this should be = # of samples in pool * individual sample ploidy
+     * Maximum number of haplotypes to consider for your population
      */
-    private int samplePloidy = GaeaVariantContextUtils.DEFAULT_PLOIDY;
-
+    private int maxNumHaplotypesInPopulation = 128;
+    
     /**
-     * allele frequency calculation model
+     * 	Maximum reads per sample given to traversal map() function
      */
-    private AFCalcFactory.Calculation AFmodel = AFCalcFactory.Calculation.getDefaultModel();
-
+    private int maxReadsInMemoryPerSample = 30000;
+    
     /**
-     *
+     * Maximum total reads given to traversal map() function
      */
-    private PairHMM.HMM_IMPLEMENTATION pairHmmImplementation = PairHMM.HMM_IMPLEMENTATION.ORIGINAL;
-
+    private int maxTotalReadsInMemory = 10000000;
+    
     /**
-     * The minimum phred-scaled Qscore threshold to separate high confidence from low confidence calls. Only genotypes with
-     * confidence >= this threshold are emitted as called sites. A reasonable threshold is 30 for high-pass calling (this
-     * is the default).
+     * 	Minimum length of a dangling branch to attempt recovery
      */
-    private double standardConfidenceForCalling = 10.0;
-
+    private int minDanglingBranchLength = 4;
+    
     /**
-     * This argument allows you to emit low quality calls as filtered records.
+     * Minimum support to not prune paths in the graph
      */
-    private double standardConfidenceForEmitting = 30.0;
-
+    private int minPruning = 2;
+    
     /**
-     * The expected heterozygosity value used to compute prior likelihoods for any locus. The default priors are:
-     * het = 1e-3, P(hom-ref genotype) = 1 - 3 * het / 2, P(het genotype) = het, P(hom-var genotype) = het / 2
+     * Number of samples that must pass the minPruning threshold
      */
-    private Double heterozygosity = HaplotypeCallerEngine.HUMAN_SNP_HETEROZYGOSITY;
-
+    private int numPruningSamples = 1;
+    
     /**
-     * Standard deviation of eterozygosity for SNP and indel calling.
+     * Which type of calls we should output
      */
-    private double heterozygosityStandardDeviation = 0.01;
-
+    private HaplotypeCallerEngine.OUTPUT_MODE outputMode = EMIT_VARIANTS_ONLY;
+    
     /**
-     * This argument informs the prior probability of having an indel at a site.
+     * The PCR indel model to use
      */
-    private double indelHeterozygosity = 1.0/8000;
-
+    private String pcrIndleModel = "CONSERVATIVE";
+    
     /**
-     * Depending on the value of the --max_alternate_alleles argument, we may genotype only a fraction of the alleles being sent on for genotyping.
-     * Using this argument instructs the genotyper to annotate (in the INFO field) the number of alternate alleles that were originally discovered at the site.
+     * The global assumed mismapping rate for reads
      */
-    private boolean annotateNumberOfAllelesDiscovered = false;
-
+    private int phredScaledGlobalReadMismappingRate = 45;
+    
     /**
-     * The PCR error rate to be used for computing fragment-based likelihoods
+     * 	Allow graphs that have non-unique kmers in the reference
      */
-    private double pcr_error = SNPGenotypeLikelihoodCalculator.DEFAULT_PCR_ERROR_RATE;
-
+    private boolean allowNonUniqueKmersInRef = false;
+    
     /**
-     * ndel gap continuation penalty, as Phred-scaled probability. I.e., 30 => 10^-30/10
+     * 	Annotate all sites with PLs
      */
-    private byte indelGapContinuationPenalty = 10;
-
+    private boolean allSitePLs = false;
+    
     /**
-     * Indel gap open penalty, as Phred-scaled probability. I.e., 30 => 10^-30/10
+     * 1000G consensus mode
      */
-    private byte indelGapOpenPenalty = 45;
-
+    private boolean consensus = false;
+    
     /**
-     * multi sample mode
+     * Print out very verbose debug information about each triggering active region
      */
-    private boolean singleSampleMode;
-
+    private boolean debug = false;
+    
     /**
-     * reducer number
+     * Don't skip calculations in ActiveRegions with no variants
      */
-    private int reducerNumber = 30;
-
+    private boolean disableOptimizations = false;
+    
     /**
-     * window size
+     * Disable physical phasing
      */
-    private int windowSize = 10000;
-
+    private boolean doNotRunPhysicalPhasing = false;
+    
+    /**
+     * Disable iterating over kmer sizes when graph cycles are detected
+     */
+    private boolean dontIncreaseKmerSizesForCycles = false;
+    
+    /**
+     * If specified, we will not trim down the active region from the full 
+     * region (active + extension) to just the active interval for genotyping
+     */
+    private boolean dontTrimActiveRegions = false;
+    
+    /**
+     * Do not analyze soft clipped bases in the reads
+     */
+    private boolean dontUseSoftClippedBases = false;
+    
+    /**
+     * Emit reads that are dropped for filtering, trimming, realignment failure
+     */
+    private boolean emitDroppedReads = false;
+    
+    /**
+     * If provided, all bases will be tagged as active
+     */
+    private boolean forceActive = false;
+    
+    /**
+     * Use additional trigger on variants found in an external alleles file
+     */
+    private boolean useAllelesTrigger = false;	
+    
+    /**
+     * Use the contamination-filtered read maps for the purposes of annotating variants
+     */
+    private boolean useFilteredReadsForAnnotations = false;
+    
+    /**
+     * end here
+     */
+    
+    
     public HaplotypeCallerOptions() {
         addOption("i", "input", true, "Input file containing sequence data (BAM or CRAM)");
         addOption("I", "is_sam_input", false, "the input is in SAM format.");
@@ -241,6 +393,7 @@ public class HaplotypeCallerOptions extends GaeaOptions implements HadoopOptions
         addOption("ARO", "activeRegionOut", true, "Output the active region to this IGV formatted file.");
         addOption("APO", "activityProfileOut", true, "Output the raw activity profile results in IGV format");
         addOption("graph", "graphOutput", true, "Write debug assembly graph information to this file");
+        addOption("o","out",true,"File to which variants should be written");
         addOption("A", "annotation", true, "One or more specific annotations to apply to variant calls, the tag is separated by \',\'");
         addOption("contamination", "contamination_fraction_to_filter", true, "Fraction of contamination to aggressively remove.");
         addOption("gt_mode", "genotyping_mode", true, "Specifies how to determine the alternate alleles to use for genotyping");
@@ -262,6 +415,7 @@ public class HaplotypeCallerOptions extends GaeaOptions implements HadoopOptions
         addOption("ActProbThresh", "activeProbabilityThreshold", true, "Threshold for the probability of a profile state being active.");
         addOption("actRegionExtension", "activeRegionExtension", true, "The active region extension; if not provided defaults to Walker annotated default");
         addOption("actRegionMax", "activeRegionMaxSize", true, "The active region maximum size; if not provided defaults to Walker annotated default");
+        addOption("A", "annotation", true, "One or more specific annotations to apply to variant calls");
         addOption("bamWriterType", "bamWriterType", true, "Which haplotypes should be written to the BAM");
         addOption("bandPassSigma", "bandPassSigma", true, "The sigma of the band pass filter Gaussian kernel; if not provided defaults to Walker annotated default");
         addOption("contaminationFile", "contamination_fraction_per_sample_file", true, "Contamination per sample");
